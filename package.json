@@ -1,6 +1,6 @@
 {
   "name": "lightweight-react-fetch",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Extremely lightweight asynchronous data fetching hook for React.",
   "main": "main.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qaiswardag/use-lightweight-fetch.git"
+    "url": "git+https://github.com/qaiswardag/lightweight-react-fetch.git"
   },
   "keywords": [
     "React",
@@ -22,7 +22,7 @@
   "author": "Qais Wardag",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/qaiswardag/use-lightweight-fetch/issues"
+    "url": "https://github.com/qaiswardag/lightweight-react-fetch/issues"
   },
-  "homepage": "https://github.com/qaiswardag/use-lightweight-fetch#readme"
+  "homepage": "https://github.com/qaiswardag/lightweight-react-fetch#readme"
 }
