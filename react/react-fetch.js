@@ -130,13 +130,17 @@ export const reactFetch = function () {
 
           // check if fetched data is a string
           if (typeof collectingErrorsJson === 'string') {
-            setIsError(`Error status: ${err.message}. ${collectingErrorsJson}`); // cllect
+            setIsError(
+              `Not able to fetch data. Error status: ${err.message}. ${collectingErrorsJson}`
+            ); // cllect
           }
 
           // check if fetched data is an array
           if (Array.isArray(collectingErrorsJson)) {
             setIsError(
-              `Error status: ${err.message}. ${collectingErrorsJson.join(' ')}`
+              `Not able to fetch data. Error status: ${
+                err.message
+              }. ${collectingErrorsJson.join(' ')}`
             ); // collect
           }
 
@@ -150,7 +154,9 @@ export const reactFetch = function () {
             // if true return response status code
             if (errorsKeys.length === 0) {
               // set "is error"
-              setIsError(`Error status: ${response.status}.`); // collect
+              setIsError(
+                `Not able to fetch data. Error status: ${response.status}.`
+              ); // collect
             }
 
             // check if "collecting errors json" contains nested objects
@@ -161,12 +167,16 @@ export const reactFetch = function () {
               for (let i = 0; i < errorsKeys.length; i++) {
                 if (Array.isArray(errorsValues[i])) {
                   // set "is error"
-                  setIsError(`Error status: ${err.message}`); // collect
+                  setIsError(
+                    `Not able to fetch data. Error status: ${err.message}`
+                  ); // collect
                   break;
                 }
                 if (isObject(errorsValues[i])) {
                   // set "is error"
-                  setIsError(`Error status: ${err.message}`); // collect
+                  setIsError(
+                    `Not able to fetch data. Error status: ${err.message}`
+                  ); // collect
                   break;
                 }
 
@@ -180,7 +190,7 @@ export const reactFetch = function () {
                     Object.values(collectingErrorsJson).join(' ');
                   // set "is error"
                   setIsError(
-                    `Error status: ${err.message}. ${errorObjToString}` // collect
+                    `Not able to fetch data. Error status: ${err.message}. ${errorObjToString}` // collect
                   );
                 }
               }
@@ -195,7 +205,7 @@ export const reactFetch = function () {
           !contentType.includes('application/json') ||
           goDirectToError === true
         ) {
-          setIsError(`Error status: ${err.message}`); // collect
+          setIsError(`Not able to fetch data. Error status: ${err.message}`); // collect
         }
       }
 
