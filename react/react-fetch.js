@@ -18,10 +18,7 @@ export const reactFetch = function () {
   const handleData = async function (
     url,
     fetchOptions = {},
-    customFetchOptions = {
-      additionalCallTime,
-      abortTimeoutTime,
-    }
+    customFetchOptions = {}
   ) {
     // set "additional call time" timeout to 0 if not set
     if (customFetchOptions.additionalCallTime === undefined) {
