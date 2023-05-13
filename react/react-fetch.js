@@ -108,7 +108,6 @@ export const reactFetch = function () {
       // default error
       setIsError(true);
       setError(`Not able to fetch data. Error status: ${err}.`);
-      setErrors(`Not able to fetch data. Error status: ${err}.`);
 
       const response = await fetch(url, fetchOptions);
 
