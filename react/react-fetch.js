@@ -6,7 +6,8 @@ export const reactFetch = function () {
   // is loading, is error, fetched data
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [validationProperties, setValidationProperties] = useState(null);
+  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState(null);
   const [fetchedData, setFetchedData] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -103,11 +104,19 @@ export const reactFetch = function () {
       clearTimeout(timer);
       setIsLoading(false);
       setIsSuccess(false);
+
+      // default error
+      setIsError(true);
+      setError(`Not able to fetch data. Error status: ${err}.`);
+      setErrors(`Not able to fetch data. Error status: ${err}.`);
+
       const response = await fetch(url, fetchOptions);
 
       // abort fetch
       if (err.name === 'AbortError') {
-        setIsError('Error fetching data: The fetch was aborted');
+        setIsError(true);
+        setError('Error fetching data: The fetch was aborted');
+        setErrors('Error fetching data: The fetch was aborted');
       }
       // handle errors
       if (err.name !== 'AbortError') {
@@ -123,18 +132,20 @@ export const reactFetch = function () {
           let collectingErrorsJson = await response.json();
 
           // set validation data properties like form input errors or old input values
-          setValidationProperties(collectingErrorsJson);
+          setErrors(collectingErrorsJson);
 
           // check if fetched data is a string
           if (typeof collectingErrorsJson === 'string') {
-            setIsError(
+            setIsError(true);
+            setError(
               `Not able to fetch data. Error status: ${err.message}. ${collectingErrorsJson}`
             ); // cllect
           }
 
           // check if fetched data is an array
           if (Array.isArray(collectingErrorsJson)) {
-            setIsError(
+            setIsError(true);
+            setError(
               `Not able to fetch data. Error status: ${
                 err.message
               }. ${collectingErrorsJson.join(' ')}`
@@ -151,7 +162,8 @@ export const reactFetch = function () {
             // if true return response status code
             if (errorsKeys.length === 0) {
               // set "is error"
-              setIsError(
+              setIsError(true);
+              setError(
                 `Not able to fetch data. Error status: ${response.status}.`
               ); // collect
             }
@@ -164,14 +176,16 @@ export const reactFetch = function () {
               for (let i = 0; i < errorsKeys.length; i++) {
                 if (Array.isArray(errorsValues[i])) {
                   // set "is error"
-                  setIsError(
+                  setIsError(true);
+                  setError(
                     `Not able to fetch data. Error status: ${err.message}`
                   ); // collect
                   break;
                 }
                 if (isObject(errorsValues[i])) {
                   // set "is error"
-                  setIsError(
+                  setIsError(true);
+                  setError(
                     `Not able to fetch data. Error status: ${err.message}`
                   ); // collect
                   break;
@@ -186,7 +200,8 @@ export const reactFetch = function () {
                   const errorObjToString =
                     Object.values(collectingErrorsJson).join(' ');
                   // set "is error"
-                  setIsError(
+                  setIsError(true);
+                  setError(
                     `Not able to fetch data. Error status: ${err.message}. ${errorObjToString}` // collect
                   );
                 }
@@ -202,7 +217,8 @@ export const reactFetch = function () {
           !contentType.includes('application/json') ||
           goDirectToError === true
         ) {
-          setIsError(`Not able to fetch data. Error status: ${err.message}`); // collect
+          setIsError(true);
+          setError(`Not able to fetch data. Error status: ${err.message}`); // collect
         }
       }
 
@@ -221,11 +237,9 @@ export const reactFetch = function () {
     fetchedData,
     isSuccess,
     isLoading,
-    setIsLoading,
     isError,
-    setIsError,
-    validationProperties,
-    setValidationProperties,
+    error,
+    errors,
   };
 
   // end of use fetch method
