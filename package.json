@@ -1,6 +1,6 @@
 {
   "name": "lightweight-react-fetch",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Extremely lightweight asynchronous data fetching hook for React.",
   "main": "main.js",
   "scripts": {
