@@ -3,7 +3,7 @@ import { usePromise } from '../helpers/use-promise';
 import { isObject } from '../helpers/is-object';
 
 export const reactFetch = function () {
-  // is loading, is error, fetched data
+  // Initial state variables
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [error, setError] = useState(null);
@@ -11,226 +11,212 @@ export const reactFetch = function () {
   const [fetchedData, setFetchedData] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // controller, signal, abort timeout, additional time out
+  // Abort controller for aborting fetch requests
   const controller = new AbortController();
   let goDirectToError = false;
 
-  // method
+  // Fetch data from the specified URL with the given options
   const handleData = async function (
     url,
     fetchOptions = {},
     customFetchOptions = {}
   ) {
-    // set "additional call time" timeout to 0 if not set
+    // Set default values for additionalCallTime and abortTimeoutTime if not provided
     if (customFetchOptions.additionalCallTime === undefined) {
       customFetchOptions.additionalCallTime = 0;
     }
-    // set "abort timeout" time to 8000 ms if not set
     if (customFetchOptions.abortTimeoutTime === undefined) {
       customFetchOptions.abortTimeoutTime = 20000;
     }
 
-    // abort
+    // Set a timer to abort the fetch request after abortTimeoutTime
     const timer = setTimeout(() => {
       controller.abort();
     }, customFetchOptions.abortTimeoutTime);
 
-    // try
     try {
       setIsLoading(true);
-      // set promise
-      const promise = usePromise(customFetchOptions.additionalCallTime);
-
-      // wait for additional response time. additional time is set when calling the method
+      const promise = usePromise(customFetchOptions.additionalCallTime); // Create a promise that resolves after additionalCallTime
+      // Wait for the promise to resolve
       await promise;
 
-      // if loading time gets exceeded
+      // If the loading time gets exceeded, abort the fetch request
       if (controller.signal.aborted) {
         setIsError(false);
         setIsLoading(false);
         clearTimeout(timer);
 
-        // jump directly to the end of catch
+        // Skip to the end of the catch block
         goDirectToError = true;
-
-        // throw new error
         throw new Error(
-          `Error 500. The loading time has been exceeded. Please refresh this page`
+          'Error 500. The loading time has been exceeded. Please refresh this page'
         );
       }
 
-      // response
-      const response = await fetch(url, fetchOptions);
+      const response = await fetch(url, fetchOptions); // Make the fetch request
 
-      // check if response is ok. if not throw error
+      // Check if the fetch request was successful. If not, throw an error
       if (response.status !== 200 && response.status !== 201) {
-        // throw new error
         throw new Error(`${response.status}. ${response.statusText}`);
       }
 
-      // set variable for content type application/json
+      // Get the Content-Type of the response
       const contentType = response.headers.get('content-type');
 
-      // check if request is application/json in the request header
+      // If the response's Content-Type is application/json, parse the response body as JSON
       if (contentType.includes('application/json')) {
-        // convert to json
         const json = await response.json();
-        // set fetched data
-        setFetchedData(json);
 
+        clearTimeout(timer);
         setIsError(false);
         setIsLoading(false);
         setIsSuccess(true);
-        clearTimeout(timer);
 
-        // return json
+        // Set the fetched data
+        setFetchedData(json);
         return json;
       }
 
+      // If the request method is not GET and the Content-Type is not application/json, return a success message
+      if (
+        fetchOptions?.method !== 'GET' &&
+        fetchOptions?.method !== 'get' &&
+        fetchOptions?.method !== undefined
+      ) {
+        clearTimeout(timer);
+        setIsError(false);
+        setIsLoading(false);
+        setIsSuccess(true);
+
+        setFetchedData('Your request was processed successfully.');
+        return 'Your request was processed successfully.';
+      }
+
+      // If the request method is GET and the Content-Type is not application/json, throw an error
       setIsError(false);
       setIsLoading(false);
       setIsSuccess(true);
       clearTimeout(timer);
-      // "fetched data" is null at this moment
 
-      // jump directly to the end of catch
-      goDirectToError = true;
-
-      // throw new  error
-      throw new Error(`500. No application/json in the request header`);
-
-      // catch
+      goDirectToError = true; // Skip to the end of the catch block
+      throw new Error('500. No application/json in the request header');
     } catch (err) {
-      clearTimeout(timer);
-      setIsLoading(false);
-      setIsSuccess(false);
+      clearTimeout(timer); // Stop the timer
+      setIsLoading(false); // Stop loading
+      setIsSuccess(false); // Mark request as unsuccessful
 
-      // default error
+      // Default error handling
       setIsError(true);
       setError(`Not able to fetch data. Error status: ${err}.`);
 
+      // Try to fetch the data again
       const response = await fetch(url, fetchOptions);
 
-      // abort fetch
+      // If fetch request was aborted, handle the AbortError
       if (err.name === 'AbortError') {
         setIsError(true);
         setError('Error fetching data: The fetch was aborted');
         setErrors('Error fetching data: The fetch was aborted');
       }
-      // handle errors
+
+      // Handle other types of errors
       if (err.name !== 'AbortError') {
-        // set variable for content type application/json
+        // Get the Content-Type of the response
         const contentType = response.headers.get('content-type');
 
-        // check if request is application/json in the request header
+        // If the response's Content-Type is application/json, parse the response body as JSON
         if (
           contentType.includes('application/json') &&
           goDirectToError === false
         ) {
-          // collect errors and convert errors to json
           let collectingErrorsJson = await response.json();
 
-          // set validation data properties like form input errors or old input values
+          // Save the error messages
           setErrors(collectingErrorsJson);
 
-          // check if fetched data is a string
+          // If the error message is a string, handle it accordingly
           if (typeof collectingErrorsJson === 'string') {
             setIsError(true);
             setError(
               `Not able to fetch data. Error status: ${err.message}. ${collectingErrorsJson}`
-            ); // cllect
+            );
           }
 
-          // check if fetched data is an array
+          // If the error message is an array, handle it accordingly
           if (Array.isArray(collectingErrorsJson)) {
             setIsError(true);
             setError(
               `Not able to fetch data. Error status: ${
                 err.message
               }. ${collectingErrorsJson.join(' ')}`
-            ); // collect
+            );
           }
 
-          // check if fetched data is an object
+          // If the error message is an object, handle it accordingly
           if (isObject(collectingErrorsJson)) {
             const errorsKeys = Object.keys(collectingErrorsJson);
-            // access values of collectingErrorsJson for checking is it contains nested objects or array
             const errorsValues = Object.values(collectingErrorsJson);
 
-            // check if "collecting errors json" is an empty object
-            // if true return response status code
+            // If there are no errors, handle it accordingly
             if (errorsKeys.length === 0) {
-              // set "is error"
               setIsError(true);
               setError(
                 `Not able to fetch data. Error status: ${response.status}.`
-              ); // collect
+              );
             }
 
-            // check if "collecting errors json" contains nested objects
-            // or arrays, "collecting errors json" is not gonna be included in isError
-            // "form validation errors" can be used to instead to access nested objects or array properties
+            // If there are errors, handle them accordingly
             if (errorsKeys.length > 0) {
-              //
               for (let i = 0; i < errorsKeys.length; i++) {
                 if (Array.isArray(errorsValues[i])) {
-                  // set "is error"
                   setIsError(true);
                   setError(
                     `Not able to fetch data. Error status: ${err.message}`
-                  ); // collect
+                  );
                   break;
                 }
                 if (isObject(errorsValues[i])) {
-                  // set "is error"
                   setIsError(true);
                   setError(
                     `Not able to fetch data. Error status: ${err.message}`
-                  ); // collect
+                  );
                   break;
                 }
 
-                //
-                // if "collecting errors json" do not contains nested objects or arrays
+                // If the error is neither an array nor an object, handle it accordingly
                 if (
                   !Array.isArray(errorsValues[i]) &&
                   !isObject(errorsValues[i])
                 ) {
                   const errorObjToString =
                     Object.values(collectingErrorsJson).join(' ');
-                  // set "is error"
+                  // Set error message when error body is a flat object
                   setIsError(true);
                   setError(
-                    `Not able to fetch data. Error status: ${err.message}. ${errorObjToString}` // collect
+                    `Not able to fetch data. Error status: ${err.message}. ${errorObjToString}`
                   );
                 }
               }
             }
           }
-
-          // end if content type is application/json
         }
 
-        // check if request is application/json in the request header
+        // If the response's Content-Type is not application/json, handle it accordingly
         if (
           !contentType.includes('application/json') ||
           goDirectToError === true
         ) {
           setIsError(true);
-          setError(`Not able to fetch data. Error status: ${err.message}`); // collect
+          setError(`Not able to fetch data. Error status: ${err.message}`);
         }
       }
 
-      // throw error
+      // Rethrow the error for further handling
       throw err;
-
-      // end catch
     }
-
-    // end fetch data method
   };
 
-  // return
+  // Return the state variables and the fetch function
   return {
     handleData,
     fetchedData,
@@ -240,6 +226,4 @@ export const reactFetch = function () {
     error,
     errors,
   };
-
-  // end of use fetch method
 };
