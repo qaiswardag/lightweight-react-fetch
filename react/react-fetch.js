@@ -63,21 +63,35 @@ export const reactFetch = function () {
       // Get the Content-Type of the response
       const contentType = response.headers.get('content-type');
 
-      // If the response's Content-Type is application/json, parse the response body as JSON
+      // Content-Type 'application/json'
       if (contentType.includes('application/json')) {
-        const json = await response.json();
-
         clearTimeout(timer);
         setIsError(false);
         setIsLoading(false);
         setIsSuccess(true);
 
         // Set the fetched data
+        const json = await response.json();
+        setFetchedData(json);
+        return json;
+      }
+      // Content-Type 'text/plain' or 'text/html'
+      if (
+        contentType.includes('text/plain') ||
+        contentType.includes('text/html')
+      ) {
+        clearTimeout(timer);
+        setIsError(false);
+        setIsLoading(false);
+        setIsSuccess(true);
+
+        // Set the fetched data
+        const json = await response.text();
         setFetchedData(json);
         return json;
       }
 
-      // If the request method is not GET and the Content-Type is not application/json, return a success message
+      // Handle non-GET requests without 'application/json', 'text/plain' or 'text/html'
       if (
         fetchOptions?.method !== 'GET' &&
         fetchOptions?.method !== 'get' &&
@@ -99,7 +113,9 @@ export const reactFetch = function () {
       clearTimeout(timer);
 
       goDirectToError = true; // Skip to the end of the catch block
-      throw new Error('500. No application/json in the request header');
+      throw new Error(
+        "'Error 500. The request header must contain 'application/json', 'text/plain' or 'text/html'"
+      );
     } catch (err) {
       clearTimeout(timer); // Stop the timer
       setIsLoading(false); // Stop loading
@@ -203,7 +219,7 @@ export const reactFetch = function () {
 
         // If the response's Content-Type is not application/json, handle it accordingly
         if (
-          !contentType.includes('application/json') ||
+          contentType.includes('application/json') === false ||
           goDirectToError === true
         ) {
           setIsError(true);
