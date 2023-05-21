@@ -64,7 +64,7 @@ export const reactFetch = function () {
       const contentType = response.headers.get('content-type');
 
       // Content-Type 'application/json'
-      if (contentType.includes('application/json')) {
+      if (contentType !== null && contentType.includes('application/json')) {
         clearTimeout(timer);
         setIsError(false);
         setIsLoading(false);
@@ -77,7 +77,7 @@ export const reactFetch = function () {
       }
       // Content-Type 'text/plain' or 'text/html'
       if (
-        contentType.includes('text/plain') ||
+        (contentType !== null && contentType.includes('text/plain')) ||
         contentType.includes('text/html')
       ) {
         clearTimeout(timer);
@@ -142,6 +142,7 @@ export const reactFetch = function () {
 
         // If the response's Content-Type is application/json, parse the response body as JSON
         if (
+          contentType !== null &&
           contentType.includes('application/json') &&
           goDirectToError === false
         ) {
@@ -219,7 +220,8 @@ export const reactFetch = function () {
 
         // If the response's Content-Type is not application/json, handle it accordingly
         if (
-          contentType.includes('application/json') === false ||
+          (contentType !== null &&
+            contentType.includes('application/json') === false) ||
           goDirectToError === true
         ) {
           setIsError(true);
